@@ -1,0 +1,21 @@
+{
+  "manifest_version": 3,
+  "name": "diHelper (QoL)",
+  "version": "0.1.0",
+  "description": "QoL overlay.",
+  "permissions": [],
+  "host_permissions": ["*://mysteralegacy.com/*", "*://www.mysteralegacy.com/*"],
+  "content_scripts": [
+    {
+      "matches": ["*://mysteralegacy.com/play/*", "*://www.mysteralegacy.com/play/*"],
+      "js": ["src/loader.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["dist/dihelper.bundle.js"],
+      "matches": ["*://mysteralegacy.com/*", "*://www.mysteralegacy.com/*"]
+    }
+  ]
+}

@@ -6,7 +6,7 @@ Extensão Chrome/Chromium (Manifest V3) que adiciona recursos de Qualidade de Vi
 
 ## Objetivo
 
-Criar um overlay leve e integrado ao client web do jogo, utilizando a própria stack gráfica exposta (PIXI / jv), adicionando ferramentas visuais auxiliares sem interferir na lógica do servidor.
+Criar um overlay leve e integrado ao client web do jogo, utilizando a própria stack gráfica exposta (PIXI_GLOBAL / jv), adicionando ferramentas visuais auxiliares sem interferir na lógica do servidor.
 
 A extensão é carregada automaticamente pelo Chrome quando a URL abaixo é acessada:
 
@@ -19,8 +19,8 @@ O carregamento ocorre via `content_script` (Manifest V3), injetando um bundle ú
 ## Funcionalidades Planejadas
 
 ### Overlay Base
-- Container PIXI próprio (`dihelper_overlay`)
-- Inicialização segura (aguarda PIXI/jv)
+- Container PIXI_GLOBAL próprio (`dihelper_overlay`)
+- Inicialização segura (aguarda PIXI_GLOBAL/jv)
 - Controle de start/stop limpo
 - Gerenciamento próprio de timers
 
