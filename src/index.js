@@ -23,7 +23,6 @@ function createMenu() {
     align-items:flex-start;
   `;
 
-  // painel que abre pra cima
   const panel = document.createElement("div");
   panel.id = "dihelper_menu_panel";
   panel.style.cssText = `
@@ -49,10 +48,8 @@ function createMenu() {
     text-align:left;
   `;
   btnInv.onclick = () => {
-    // auto-start se ainda não existe overlay
     if (!inv) {
       diStart();
-      // tenta abrir depois que iniciar
       setTimeout(() => inv?.toggle?.(), 250);
       return;
     }
@@ -61,7 +58,6 @@ function createMenu() {
 
   panel.appendChild(btnInv);
 
-  // linha de botões sempre visível (diHelper + start + stop)
   const row = document.createElement("div");
   row.style.cssText = `
     display:flex;
@@ -85,8 +81,6 @@ function createMenu() {
     font-size:12px;
   `;
   main.onclick = () => {
-    // auto-start quando clicar no diHelper
-    if (!inv) diStart();
     panel.style.display = panel.style.display === "none" ? "block" : "none";
   };
 
@@ -133,24 +127,25 @@ function createMenu() {
 
   (document.body || document.documentElement).appendChild(root);
 
-  console.log("[DIHELPER] menu OK ✅ (canto inferior esquerdo)");
+  console.log("[DIHELPER] menu OK ✅ (persistente)");
 }
 
-function destroyMenu() {
-  document.getElementById("dihelper_menu_root")?.remove();
+// NÃO vamos mais destruir o menu
+function ensureMenu() {
+  createMenu();
 }
 
 // --- START / STOP ---
 function waitAndStart(tries = 0) {
-  const ok = window.PIXI && window.jv; // PIXI do jogo + jv
+  const ok = window.PIXI && window.jv;
 
   if (ok) {
     try {
-      createMenu();
+      ensureMenu();
 
       if (!inv) {
-        const created = createInvOverlay({ slots: 75, cols: 15, rows: 5 });
-        created.hide(); // não abre sozinho
+        const created = createInvOverlay({ slots: 75, cols: 15, rows: 5, size: 30, gap: 6, x: 12, y: 50 });
+        created.hide();
         inv = created;
 
         console.log("[DIHELPER] INV overlay criado ✅ (inicia fechado)");
@@ -173,8 +168,9 @@ function waitAndStart(tries = 0) {
 }
 
 function diStart() {
-  if (inv) return;          // já iniciou
-  if (starting) return;     // já está tentando iniciar
+  if (inv) return;
+  if (starting) return;
+
   starting = true;
   waitAndStart(0);
 }
@@ -183,16 +179,20 @@ function diStop() {
   try {
     inv?.destroy?.();
   } catch {}
+
   inv = null;
 
-  destroyMenu();
-  console.log("[DIHELPER] stop ✅");
+  // 🔥 AQUI ESTÁ A MUDANÇA:
+  // NÃO removemos mais o menu
+  // destroyMenu(); ❌ removido
+
+  console.log("[DIHELPER] stop ✅ (menu permanece)");
 }
 
-// comandos globais (debug)
+// debug
 window.diStart = diStart;
 window.diStop = diStop;
 window.diInvToggle = () => inv?.toggle?.();
 
-// tenta iniciar o menu cedo, mas o overlay só nasce quando PIXI/jv existir
-createMenu();
+// garante que o menu sempre exista
+ensureMenu();
