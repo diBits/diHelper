@@ -1,6 +1,26 @@
 import { textureById } from "../game/textureById.js";
 import { findStage } from "../game/findStage.js";
 
+function getQty(item) {
+  if (!item) return 0;
+
+  // tenta vários nomes comuns (porque o jogo pode chamar diferente)
+  const v =
+    item.qty ?? item.qtd ?? item.amount ?? item.amt ?? item.count ?? item.num ?? item.n;
+
+  // se vier como string/numero
+  if (typeof v === "number") return v;
+  if (typeof v === "string") {
+    const n = parseInt(v, 10);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  // alguns jogos guardam em array: [spr, qty]
+  if (Array.isArray(item) && typeof item[1] === "number") return item[1];
+
+  return 0;
+}
+
 export function createInvOverlay(opts = {}) {
   const { PIXI } = window;
   if (!PIXI || !window.jv) throw new Error("PIXI/jv não disponíveis ainda");
@@ -11,6 +31,9 @@ export function createInvOverlay(opts = {}) {
   const slotsTotal = opts.slots ?? 75;
   const cols = opts.cols ?? 15;
   const rows = opts.rows ?? 5;
+
+  const size = opts.size ?? 28;
+  const gap = opts.gap ?? 6;
 
   // container root
   const root = new PIXI.Container();
@@ -24,13 +47,11 @@ export function createInvOverlay(opts = {}) {
   panel.y = 60;
   root.addChild(panel);
 
-  const size = 28;
-  const gap = 4;
   const startX = 10;
-  const startY = 36;
+  const startY = 42; // um pouco mais pra baixo pra caber o header
 
   const w = startX + cols * (size + gap) + 10;
-  const h = startY + rows * (size + gap) + 12;
+  const h = startY + rows * (size + gap) + 14;
 
   const bg = new PIXI.Graphics();
   bg.beginFill(0x000000, 0.55);
@@ -58,6 +79,8 @@ export function createInvOverlay(opts = {}) {
 
   // grid
   const slots = [];
+  const qtyTexts = [];
+
   for (let i = 0; i < slotsTotal; i++) {
     const spr = new PIXI.Sprite(textureById(791) || PIXI.Texture.WHITE);
     spr.width = size;
@@ -65,15 +88,29 @@ export function createInvOverlay(opts = {}) {
 
     const col = i % cols;
     const row = Math.floor(i / cols);
-
     spr.x = startX + col * (size + gap);
     spr.y = startY + row * (size + gap);
 
     panel.addChild(spr);
     slots.push(spr);
+
+    // qty (bem “embaixo” dentro do slot)
+    const qt = new PIXI.Text("", {
+      fontFamily: "Verdana",
+      fontSize: Math.max(10, Math.floor(size * 0.38)),
+      fill: 0xffffff,
+      dropShadow: true,
+      dropShadowDistance: 1,
+      dropShadowBlur: 2,
+    });
+    qt.anchor.set(1, 1);
+    qt.x = spr.x + size - 1;
+    qt.y = spr.y + size - 1;
+    panel.addChild(qt);
+    qtyTexts.push(qt);
   }
 
-  // começa visível? NÃO — o index chama hide()
+  // o index chama hide()
   panel.visible = true;
 
   function update() {
@@ -81,12 +118,12 @@ export function createInvOverlay(opts = {}) {
 
     for (let i = 0; i < slotsTotal; i++) {
       const item = data[i];
-      const tex =
-        item?.spr !== undefined
-          ? textureById(item.spr)
-          : textureById(791);
 
+      const tex = item?.spr !== undefined ? textureById(item.spr) : textureById(791);
       slots[i].texture = tex || PIXI.Texture.WHITE;
+
+      const q = getQty(item);
+      qtyTexts[i].text = q > 1 ? String(q) : "";
     }
   }
 
@@ -94,15 +131,9 @@ export function createInvOverlay(opts = {}) {
   update();
 
   return {
-    show() {
-      panel.visible = true;
-    },
-    hide() {
-      panel.visible = false;
-    },
-    toggle() {
-      panel.visible = !panel.visible;
-    },
+    show() { panel.visible = true; },
+    hide() { panel.visible = false; },
+    toggle() { panel.visible = !panel.visible; },
     destroy() {
       clearInterval(timer);
       root.removeFromParent?.();
