@@ -1,6 +1,7 @@
 import { ModuleManager } from "./ModuleManager.js";
 import { MenuUI } from "../ui/MenuUI.js";
 import { InventoryModule } from "../modules/inventory/InventoryModule.js";
+import { CompassModule } from "../modules/compass/CompassModule.js";
 
 export class App {
   constructor() {
@@ -21,10 +22,13 @@ export class App {
       })
     );
 
+    this.modules.register("compass", new CompassModule());
+
     this.menuUI = new MenuUI({
       onStart: () => this.start(),
       onStop: () => this.stop(),
       onToggleInventory: () => this.toggleInventory(),
+      onToggleCompass: () => this.toggleCompass(),
     });
 
     console.log("[DIHELPER] App inicializado ✅");
@@ -37,6 +41,10 @@ export class App {
   getInventoryModule() {
     return this.modules.get("inventory");
   }
+
+  getCompassModule() {
+    return this.modules.get("compass");
+}
 
   start() {
     this.ensureMenu();
@@ -55,10 +63,16 @@ export class App {
     this.getInventoryModule()?.toggle();
   }
 
+  toggleCompass() {
+    this.ensureMenu();
+    this.getCompassModule()?.toggle();
+}
+
   exposeDebug() {
     window.diStart = () => this.start();
     window.diStop = () => this.stop();
     window.diInvToggle = () => this.toggleInventory();
+    window.diCompassToggle = () => this.toggleCompass();
   }
 
   mount() {

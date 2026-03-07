@@ -3,13 +3,15 @@ export class MenuUI {
         this.onStart = options.onStart ?? (() => { });
         this.onStop = options.onStop ?? (() => { });
         this.onToggleInventory = options.onToggleInventory ?? (() => { });
+        this.onToggleCompass = options.onToggleCompass ?? (() => { });
 
         this.root = null;
         this.panel = null;
-        this.mainButton = null;
-        this.startButton = null;
-        this.stopButton = null;
-        this.invButton = null;
+        this.mainButton = null; // diHelp
+        this.startButton = null; // Start
+        this.stopButton = null; // Stop
+        this.invButton = null; // inventario
+        this.compassButton = null; // bussola
     }
 
     mount() {
@@ -23,6 +25,7 @@ export class MenuUI {
             this.startButton = document.getElementById("dihelper_btn_start");
             this.stopButton = document.getElementById("dihelper_btn_stop");
             this.invButton = document.getElementById("dihelper_btn_inv");
+            this.compassButton = document.getElementById("dihelper_btn_compass");
             return;
         }
 
@@ -58,6 +61,7 @@ export class MenuUI {
         btnInv.textContent = "INV+";
         btnInv.style.cssText = `
       width:170px;
+      display:block;
       padding:8px 10px;
       border-radius:0;
       border:1px solid rgba(55,55,55,.95);
@@ -70,6 +74,26 @@ export class MenuUI {
         btnInv.onclick = () => this.onToggleInventory();
 
         panel.appendChild(btnInv);
+
+        const btnCompass = document.createElement("button");
+        btnCompass.id = "dihelper_btn_compass";
+        btnCompass.textContent = "COMPASS";
+        btnCompass.style.cssText = `
+      width:170px;
+      display:block;
+      padding:8px 10px;
+      border-radius:0;
+      border:1px solid rgba(55,55,55,.95);
+      background:rgba(255,255,255,.08);
+      color:#fff;
+      cursor:pointer;
+      text-align:center;
+      box-sizing:border-box;
+      margin-top:8px;
+    `;
+        btnCompass.onclick = () => this.onToggleCompass();
+
+        panel.appendChild(btnCompass);
 
         const row = document.createElement("div");
         row.style.cssText = `
@@ -144,6 +168,7 @@ export class MenuUI {
         this.startButton = btnStart;
         this.stopButton = btnStop;
         this.invButton = btnInv;
+        this.compassButton = btnCompass;
 
         console.log("[DIHELPER] MenuUI montado ✅");
     }
