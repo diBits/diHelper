@@ -41,36 +41,19 @@ export function createInvOverlay(opts = {}) {
   const stage = findStage();
   if (!stage) throw new Error("Stage não encontrado");
 
-  // ====== CONFIG ======
   const slotsTotal = opts.slots ?? 75;
 
-  // ✅ 5 blocos de 15 (3x5)
   const groupSize = 15;
-  const groups = Math.ceil(slotsTotal / groupSize); // 5
+  const groups = Math.ceil(slotsTotal / groupSize);
   const groupCols = 3;
   const groupRows = 5;
 
   const size = opts.size ?? 22;
   const gap = opts.gap ?? 6;
-
   const groupGap = opts.groupGap ?? 14;
 
   const panelX = opts.x ?? 12;
   const panelY = opts.y ?? 60;
-
-  // ✅ CORES DAS BORDAS (1 por bloco)
-  // ajuste livre: [bag1, bag2, bag3, bag4, bag5]
-  const groupBorderColors = opts.groupBorderColors ?? [
-    0x2aa7ff, // azul
-    0xffd400, // amarelo
-    0xffffff, // branco
-    0x7cff00, // verde
-    0xff4be1, // rosa
-  ];
-
-  const borderAlpha = opts.borderAlpha ?? 0.95;
-  const borderThickness = opts.borderThickness ?? 1.5;
-  const borderRadius = opts.borderRadius ?? 10;
 
   const root = new PIXI.Container();
   root.zIndex = 999999;
@@ -85,44 +68,54 @@ export function createInvOverlay(opts = {}) {
   root.addChild(panel);
 
   const pad = 12;
-  const startX = pad;
-  const startY = pad;
 
   const slots = [];
   const nameTexts = [];
   const qtyTexts = [];
 
-  // ====== TAMANHO FUNDO ======
   const blockW = groupCols * (size + gap) - gap;
   const blockH = groupRows * (size + gap) - gap;
 
+  const extraBottom = 18; // aumenta a altura total do painel
   const w = pad + groups * blockW + (groups - 1) * groupGap + pad;
-  const h = pad + blockH + pad;
+  const h = pad + blockH + pad + extraBottom;
 
-  // Fundo geral
+  // centraliza verticalmente o conteúdo dentro do painel
+  const innerAvailableH = h - pad - pad;
+  const startX = pad;
+  const startY = pad + Math.floor((innerAvailableH - blockH) / 2);
+
+  // controla cor do inventário e fundo
   const bg = new PIXI.Graphics();
-  bg.beginFill(0x000000, 0.45);
-  bg.drawRoundedRect(0, 0, w, h, 12);
+  bg.lineStyle(3, 0x3a3a3a, 0.95);
+  bg.beginFill(0x111111, 0.72);
+  bg.drawRoundedRect(0, 0, w, h, 6);
   bg.endFill();
   panel.addChild(bg);
 
-  // ✅ BORDAS POR BLOCO (bag)
-  // desenha um retângulo por grupo, alinhado ao grid
-  const borders = new PIXI.Graphics();
-  for (let g = 0; g < groups; g++) {
-    const bx = startX + g * (blockW + groupGap) - 6; // margem externa
-    const by = startY - 6;
-    const bw = blockW + 12;
-    const bh = blockH + 12;
+  // bordas e cor de cada mochila
+  const bagBorders = new PIXI.Graphics();
+  bagBorders.lineStyle(1, 0x7a7a7a, 1);
 
-    const color = groupBorderColors[g % groupBorderColors.length];
+  for (let group = 0; group < groups; group++) {
+    const bagX = startX + group * (blockW + groupGap);
+    const bagY = startY;
 
-    borders.lineStyle(borderThickness, color, borderAlpha);
-    borders.drawRoundedRect(bx, by, bw, bh, borderRadius);
+    bagBorders.drawRoundedRect(
+      bagX - 4,
+      bagY - 4,
+      blockW + 8,
+      blockH + 8,
+      4
+    );
   }
-  panel.addChild(borders);
 
-  // Reservas pequenas
+  panel.addChild(bagBorders);
+
+  // Destaque amarelo dos slots 1 ao 6 (índices 0 a 5)
+  const slotHighlights = new PIXI.Graphics();
+  panel.addChild(slotHighlights);
+
   const topTextH = Math.max(8, Math.floor(size * 0.22));
   const iconSize = Math.floor(size * 0.92);
 
@@ -136,7 +129,12 @@ export function createInvOverlay(opts = {}) {
     const baseX = startX + group * (blockW + groupGap) + col * (size + gap);
     const baseY = startY + row * (size + gap);
 
-    // Nome
+    if (i >= 0 && i <= 5) {
+      slotHighlights.beginFill(0xffd400, 0.3);
+      slotHighlights.drawRoundedRect(baseX, baseY, size, size, 5);
+      slotHighlights.endFill();
+    }
+
     const nm = new PIXI.Text("", {
       fontFamily: "Verdana",
       fontSize: Math.max(8, Math.floor(size * 0.22)),
@@ -151,7 +149,6 @@ export function createInvOverlay(opts = {}) {
     panel.addChild(nm);
     nameTexts.push(nm);
 
-    // Ícone
     const spr = new PIXI.Sprite(textureById(791) || PIXI.Texture.WHITE);
     spr.width = iconSize;
     spr.height = iconSize;
@@ -160,10 +157,6 @@ export function createInvOverlay(opts = {}) {
     panel.addChild(spr);
     slots.push(spr);
 
-    // ✅ garante nome na frente do ícone
-    panel.addChild(nm);
-
-    // Qty
     const qt = new PIXI.Text("", {
       fontFamily: "Verdana",
       fontSize: Math.max(8, Math.floor(size * 0.22)),
@@ -177,9 +170,6 @@ export function createInvOverlay(opts = {}) {
     qt.y = baseY + size - 2;
     panel.addChild(qt);
     qtyTexts.push(qt);
-
-    // ✅ nome no topo absoluto (por segurança)
-    panel.addChild(nm);
   }
 
   panel.visible = true;
@@ -205,9 +195,15 @@ export function createInvOverlay(opts = {}) {
   update();
 
   return {
-    show() { panel.visible = true; },
-    hide() { panel.visible = false; },
-    toggle() { panel.visible = !panel.visible; },
+    show() {
+      panel.visible = true;
+    },
+    hide() {
+      panel.visible = false;
+    },
+    toggle() {
+      panel.visible = !panel.visible;
+    },
     destroy() {
       clearInterval(timer);
       root.removeFromParent?.();

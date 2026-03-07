@@ -1,20 +1,20 @@
 import { createInvOverlay } from "../ui/invOverlay.js";
 
 export class App {
-  constructor() {
-    this.inv = null;
-    this.starting = false;
+    constructor() {
+        this.inv = null;
+        this.starting = false;
 
-    console.log("[DIHELPER] App inicializado ✅");
-  }
+        console.log("[DIHELPER] App inicializado ✅");
+    }
 
-  createMenu() {
-    const rootId = "dihelper_menu_root";
-    if (document.getElementById(rootId)) return;
+    createMenu() {
+        const rootId = "dihelper_menu_root";
+        if (document.getElementById(rootId)) return;
 
-    const root = document.createElement("div");
-    root.id = rootId;
-    root.style.cssText = `
+        const root = document.createElement("div");
+        root.id = rootId;
+        root.style.cssText = `
       position:fixed;
       left:12px;
       bottom:12px;
@@ -25,9 +25,9 @@ export class App {
       align-items:flex-start;
     `;
 
-    const panel = document.createElement("div");
-    panel.id = "dihelper_menu_panel";
-    panel.style.cssText = `
+        const panel = document.createElement("div");
+        panel.id = "dihelper_menu_panel";
+        panel.style.cssText = `
       display:none;
       margin-bottom:8px;
       background:rgba(0,0,0,.75);
@@ -37,9 +37,9 @@ export class App {
       min-width:220px;
     `;
 
-    const btnInv = document.createElement("button");
-    btnInv.textContent = "INV+";
-    btnInv.style.cssText = `
+        const btnInv = document.createElement("button");
+        btnInv.textContent = "INV+";
+        btnInv.style.cssText = `
       width:100%;
       padding:8px 10px;
       border-radius:8px;
@@ -49,22 +49,22 @@ export class App {
       cursor:pointer;
       text-align:left;
     `;
-    btnInv.onclick = () => this.toggleInventory();
+        btnInv.onclick = () => this.toggleInventory();
 
-    panel.appendChild(btnInv);
+        panel.appendChild(btnInv);
 
-    const row = document.createElement("div");
-    row.style.cssText = `
+        const row = document.createElement("div");
+        row.style.cssText = `
       display:flex;
       gap:8px;
       align-items:center;
     `;
 
-    const main = document.createElement("button");
-    main.id = "dihelper_menu_btn";
-    main.textContent = "diHelper";
-    main.title = "diHelper menu";
-    main.style.cssText = `
+        const main = document.createElement("button");
+        main.id = "dihelper_menu_btn";
+        main.textContent = "diHelper";
+        main.title = "diHelper menu";
+        main.style.cssText = `
       padding:8px 12px;
       min-height:42px;
       border-radius:12px;
@@ -75,15 +75,15 @@ export class App {
       font-weight:bold;
       font-size:12px;
     `;
-    main.onclick = () => {
-      panel.style.display = panel.style.display === "none" ? "block" : "none";
-    };
+        main.onclick = () => {
+            panel.style.display = panel.style.display === "none" ? "block" : "none";
+        };
 
-    const btnStart = document.createElement("button");
-    btnStart.id = "dihelper_btn_start";
-    btnStart.textContent = "Start";
-    btnStart.title = "Iniciar diHelper";
-    btnStart.style.cssText = `
+        const btnStart = document.createElement("button");
+        btnStart.id = "dihelper_btn_start";
+        btnStart.textContent = "Start";
+        btnStart.title = "Iniciar diHelper";
+        btnStart.style.cssText = `
       padding:8px 10px;
       min-height:42px;
       border-radius:12px;
@@ -94,13 +94,13 @@ export class App {
       font-weight:bold;
       font-size:12px;
     `;
-    btnStart.onclick = () => this.start();
+        btnStart.onclick = () => this.start();
 
-    const btnStop = document.createElement("button");
-    btnStop.id = "dihelper_btn_stop";
-    btnStop.textContent = "Stop";
-    btnStop.title = "Parar diHelper";
-    btnStop.style.cssText = `
+        const btnStop = document.createElement("button");
+        btnStop.id = "dihelper_btn_stop";
+        btnStop.textContent = "Stop";
+        btnStop.title = "Parar diHelper";
+        btnStop.style.cssText = `
       padding:8px 10px;
       min-height:42px;
       border-radius:12px;
@@ -111,100 +111,105 @@ export class App {
       font-weight:bold;
       font-size:12px;
     `;
-    btnStop.onclick = () => this.stop();
+        btnStop.onclick = () => this.stop();
 
-    row.appendChild(main);
-    row.appendChild(btnStart);
-    row.appendChild(btnStop);
+        row.appendChild(main);
+        row.appendChild(btnStart);
+        row.appendChild(btnStop);
 
-    root.appendChild(panel);
-    root.appendChild(row);
+        root.appendChild(panel);
+        root.appendChild(row);
 
-    (document.body || document.documentElement).appendChild(root);
+        (document.body || document.documentElement).appendChild(root);
 
-    console.log("[DIHELPER] menu OK ✅ (persistente)");
-  }
+        console.log("[DIHELPER] menu OK ✅ (persistente)");
+    }
 
-  ensureMenu() {
-    this.createMenu();
-  }
+    ensureMenu() {
+        this.createMenu();
+    }
 
-  waitAndStart(tries = 0) {
-    const ok = window.PIXI && window.jv;
+    waitAndStart(tries = 0) {
+        const ok = window.PIXI && window.jv;
 
-    if (ok) {
-      try {
-        this.ensureMenu();
+        if (ok) {
+            try {
+                this.ensureMenu();
 
-        if (!this.inv) {
-          const created = createInvOverlay({
-            slots: 75,
-            cols: 15,
-            rows: 5,
-            size: 30,
-            gap: 6,
-            x: 12,
-            y: 50,
-          });
+                if (!this.inv) {
+                    const created = createInvOverlay({
+                        slots: 75,
+                        cols: 15,
+                        rows: 5,
+                        size: 30,
+                        gap: 6,
+                        x: 0,
+                        y: 50,
+                    });
 
-          created.hide();
-          this.inv = created;
+                    created.hide();
+                    this.inv = created;
 
-          console.log("[DIHELPER] INV overlay criado ✅ (inicia fechado)");
+                    console.log("[DIHELPER] INV overlay criado ✅ (inicia fechado)");
+                }
+            } catch (e) {
+                console.error("[DIHELPER] falha ao iniciar:", e);
+            } finally {
+                this.starting = false;
+            }
+            return;
         }
-      } catch (e) {
-        console.error("[DIHELPER] falha ao iniciar:", e);
-      } finally {
-        this.starting = false;
-      }
-      return;
+
+        if (tries > 600) {
+            console.warn("[DIHELPER] timeout esperando PIXI/jv");
+            this.starting = false;
+            return;
+        }
+
+        setTimeout(() => this.waitAndStart(tries + 1), 100);
     }
 
-    if (tries > 600) {
-      console.warn("[DIHELPER] timeout esperando PIXI/jv");
-      this.starting = false;
-      return;
+    start() {
+        if (this.inv) return;
+        if (this.starting) return;
+
+        this.starting = true;
+        this.waitAndStart(0);
     }
 
-    setTimeout(() => this.waitAndStart(tries + 1), 100);
-  }
+    stop() {
+        try {
+            this.inv?.destroy?.();
+        } catch { }
 
-  start() {
-    if (this.inv) return;
-    if (this.starting) return;
+        this.inv = null;
 
-    this.starting = true;
-    this.waitAndStart(0);
-  }
+        const panel = document.getElementById("dihelper_menu_panel");
+        if (panel) {
+            panel.style.display = "none";
+        }
 
-  stop() {
-    try {
-      this.inv?.destroy?.();
-    } catch {}
-
-    this.inv = null;
-
-    console.log("[DIHELPER] stop ✅ (menu permanece)");
-  }
-
-  toggleInventory() {
-    if (!this.inv) {
-      this.start();
-      setTimeout(() => this.inv?.toggle?.(), 250);
-      return;
+        console.log("[DIHELPER] stop ✅ (overlay destruído e painel fechado)");
     }
 
-    this.inv.toggle();
-  }
+    toggleInventory() {
+        if (!this.inv) {
+            this.start();
+            setTimeout(() => this.inv?.toggle?.(), 250);
+            return;
+        }
 
-  exposeDebug() {
-    window.diStart = () => this.start();
-    window.diStop = () => this.stop();
-    window.diInvToggle = () => this.toggleInventory();
-  }
+        this.inv.toggle();
+    }
 
-  mount() {
-    this.exposeDebug();
-    this.ensureMenu();
-  }
+    exposeDebug() {
+        window.diStart = () => this.start();
+        window.diStop = () => this.stop();
+        window.diInvToggle = () => this.toggleInventory();
+    }
+
+    mount() {
+        this.exposeDebug();
+        this.ensureMenu();
+    }
 }
