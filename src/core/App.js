@@ -1,19 +1,25 @@
+import { ModuleManager } from "./ModuleManager.js";
 import { MenuUI } from "../ui/MenuUI.js";
 import { InventoryModule } from "../modules/inventory/InventoryModule.js";
 
 export class App {
   constructor() {
-    this.inventory = new InventoryModule({
-      overlayOptions: {
-        slots: 75,
-        cols: 15,
-        rows: 5,
-        size: 30,
-        gap: 6,
-        x: 0,
-        y: 50,
-      },
-    });
+    this.modules = new ModuleManager();
+
+    this.modules.register(
+      "inventory",
+      new InventoryModule({
+        overlayOptions: {
+          slots: 75,
+          cols: 15,
+          rows: 5,
+          size: 30,
+          gap: 6,
+          x: 0,
+          y: 50,
+        },
+      })
+    );
 
     this.menuUI = new MenuUI({
       onStart: () => this.start(),
@@ -28,21 +34,25 @@ export class App {
     this.menuUI.ensureMounted();
   }
 
+  getInventoryModule() {
+    return this.modules.get("inventory");
+  }
+
   start() {
     this.ensureMenu();
-    this.inventory.start();
+    this.getInventoryModule()?.start();
   }
 
   stop() {
-    this.inventory.stop();
+    this.modules.stopAll();
     this.menuUI.closePanel();
 
-    console.log("[DIHELPER] stop ✅ (overlay destruído e painel fechado)");
+    console.log("[DIHELPER] stop ✅ (módulos parados e painel fechado)");
   }
 
   toggleInventory() {
     this.ensureMenu();
-    this.inventory.toggle();
+    this.getInventoryModule()?.toggle();
   }
 
   exposeDebug() {
