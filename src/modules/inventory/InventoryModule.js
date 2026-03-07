@@ -1,4 +1,4 @@
-import { createInvOverlay } from "../../ui/invOverlay.js";
+import { createInvOverlay } from "./InventoryOverlay.js";
 import { buildInventoryOverlayOptions } from "./inventory.js";
 
 export class InventoryModule {

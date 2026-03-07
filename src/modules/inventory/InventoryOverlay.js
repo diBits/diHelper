@@ -1,5 +1,5 @@
-import { textureById } from "../game/textureById.js";
-import { findStage } from "../game/findStage.js";
+import { textureById } from "../../game/textureById.js";
+import { findStage } from "../../game/findStage.js";
 
 function getQty(item) {
   if (!item) return 0;
