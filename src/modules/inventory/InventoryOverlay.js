@@ -34,6 +34,41 @@ function getName(item) {
   return typeof v === "string" ? v.trim() : "";
 }
 
+function getLocalPoint(panel, event) {
+  try {
+    return event?.data?.getLocalPosition(panel) ?? { x: 0, y: 0 };
+  } catch {
+    return { x: 0, y: 0 };
+  }
+}
+
+function sendSwap(fromSlot, toSlot) {
+  if (fromSlot === toSlot) return false;
+  if (fromSlot == null || toSlot == null) return false;
+
+  const sender =
+    (typeof window.send === "function" && window.send) ||
+    (typeof window.jv?.send === "function" && window.jv.send) ||
+    null;
+
+  if (!sender) {
+    console.warn("[DIHELPER] InventoryOverlay: função send não encontrada");
+    return false;
+  }
+
+  try {
+    sender({ type: "sw", slot: fromSlot, swap: toSlot });
+    console.log("[DIHELPER] InventoryOverlay: swap enviado ✅", {
+      from: fromSlot,
+      to: toSlot,
+    });
+    return true;
+  } catch (e) {
+    console.error("[DIHELPER] InventoryOverlay: falha ao enviar swap:", e);
+    return false;
+  }
+}
+
 export function createInvOverlay(opts = {}) {
   const { PIXI } = window;
   if (!PIXI || !window.jv) throw new Error("PIXI/jv não disponíveis ainda");
@@ -65,27 +100,27 @@ export function createInvOverlay(opts = {}) {
   stage.addChild(root);
 
   const panel = new PIXI.Container();
+  panel.sortableChildren = true;
   root.addChild(panel);
 
   const pad = 12;
 
   const slots = [];
+  const slotMeta = [];
   const nameTexts = [];
   const qtyTexts = [];
 
   const blockW = groupCols * (size + gap) - gap;
   const blockH = groupRows * (size + gap) - gap;
 
-  const extraBottom = 18; // aumenta a altura total do painel
+  const extraBottom = 18;
   const w = pad + groups * blockW + (groups - 1) * groupGap + pad;
   const h = pad + blockH + pad + extraBottom;
 
-  // centraliza verticalmente o conteúdo dentro do painel
   const innerAvailableH = h - pad - pad;
   const startX = pad;
   const startY = pad + Math.floor((innerAvailableH - blockH) / 2);
 
-  // controla cor do inventário e fundo
   const bg = new PIXI.Graphics();
   bg.lineStyle(3, 0x3a3a3a, 0.95);
   bg.beginFill(0x111111, 0.72);
@@ -93,7 +128,6 @@ export function createInvOverlay(opts = {}) {
   bg.endFill();
   panel.addChild(bg);
 
-  // bordas e cor de cada mochila
   const bagBorders = new PIXI.Graphics();
   bagBorders.lineStyle(1, 0x7a7a7a, 1);
 
@@ -112,12 +146,101 @@ export function createInvOverlay(opts = {}) {
 
   panel.addChild(bagBorders);
 
-  // Destaque amarelo dos slots 1 ao 6 (índices 0 a 5)
   const slotHighlights = new PIXI.Graphics();
   panel.addChild(slotHighlights);
 
   const topTextH = Math.max(8, Math.floor(size * 0.22));
   const iconSize = Math.floor(size * 0.92);
+
+  let dragSprite = null;
+  let dragStartSlot = null;
+
+  function restoreDraggedSprite() {
+    if (!dragSprite) return;
+
+    const meta = slotMeta[dragStartSlot];
+    if (meta) {
+      dragSprite.x = meta.spriteX;
+      dragSprite.y = meta.spriteY;
+    }
+
+    dragSprite.scale.set(1, 1);
+    dragSprite.alpha = 1;
+    dragSprite.zIndex = 1;
+
+    dragSprite
+      .off("mousemove", onDragMove)
+      .off("touchmove", onDragMove)
+      .off("mouseup", onDragEnd)
+      .off("mouseupoutside", onDragEnd)
+      .off("touchend", onDragEnd)
+      .off("touchendoutside", onDragEnd);
+
+    dragSprite = null;
+    dragStartSlot = null;
+  }
+
+  function findDropTarget(localX, localY) {
+    for (const meta of slotMeta) {
+      if (!meta) continue;
+
+      const inside =
+        localX >= meta.baseX &&
+        localX <= meta.baseX + size &&
+        localY >= meta.baseY &&
+        localY <= meta.baseY + size;
+
+      if (inside) return meta.slot;
+    }
+
+    return null;
+  }
+
+  function onDragMove(event) {
+    if (!dragSprite) return;
+
+    const point = getLocalPoint(panel, event);
+    dragSprite.x = point.x - iconSize / 2;
+    dragSprite.y = point.y - iconSize / 2;
+  }
+
+  function onDragEnd(event) {
+    if (!dragSprite) return;
+
+    const point = getLocalPoint(panel, event);
+    const targetSlot = findDropTarget(point.x, point.y);
+
+    if (
+      targetSlot !== null &&
+      dragStartSlot !== null &&
+      targetSlot !== dragStartSlot
+    ) {
+      sendSwap(dragStartSlot, targetSlot);
+    }
+
+    restoreDraggedSprite();
+  }
+
+  function onDragStart(event) {
+    if (dragSprite) return;
+
+    dragSprite = this;
+    dragStartSlot = this.slotIndex;
+
+    dragSprite.scale.set(1.25, 1.25);
+    dragSprite.alpha = 0.95;
+    dragSprite.zIndex = 1000;
+
+    dragSprite
+      .on("mousemove", onDragMove)
+      .on("touchmove", onDragMove)
+      .on("mouseup", onDragEnd)
+      .on("mouseupoutside", onDragEnd)
+      .on("touchend", onDragEnd)
+      .on("touchendoutside", onDragEnd);
+
+    onDragMove(event);
+  }
 
   for (let i = 0; i < slotsTotal; i++) {
     const group = Math.floor(i / groupSize);
@@ -140,13 +263,23 @@ export function createInvOverlay(opts = {}) {
     spr.height = iconSize;
     spr.x = baseX + Math.floor((size - iconSize) / 2);
     spr.y = baseY + topTextH + Math.floor((size - topTextH - iconSize) / 2);
+    spr.zIndex = 1;
+    spr.slotIndex = i;
+    spr.interactive = true;
+    spr.buttonMode = true;
+
+    spr
+      .on("mousedown", onDragStart)
+      .on("touchstart", onDragStart);
+
     panel.addChild(spr);
     slots.push(spr);
 
     const nm = new PIXI.Text("", {
       fontFamily: "Verdana",
-      fontSize: Math.max(8, Math.floor(size * 0.26)),
+      fontSize: Math.max(8, Math.floor(size * 0.22)),
       fill: 0xffffff,
+      fontWeight: "bold",
       stroke: 0x000000,
       strokeThickness: 2,
       dropShadow: true,
@@ -159,10 +292,19 @@ export function createInvOverlay(opts = {}) {
     panel.addChild(nm);
     nameTexts.push(nm);
 
+    slotMeta.push({
+      slot: i,
+      baseX,
+      baseY,
+      spriteX: spr.x,
+      spriteY: spr.y,
+    });
+
     const qt = new PIXI.Text("", {
       fontFamily: "Verdana",
-      fontSize: Math.max(8, Math.floor(size * 0.24)),
+      fontSize: Math.max(8, Math.floor(size * 0.22)),
       fill: 0xffffff,
+      fontWeight: "bold",
       stroke: 0x000000,
       strokeThickness: 2,
       dropShadow: true,
@@ -172,6 +314,7 @@ export function createInvOverlay(opts = {}) {
     qt.anchor.set(0.5, 1);
     qt.x = baseX + size / 2;
     qt.y = baseY + size + 3;
+    qt.zIndex = 3;
     panel.addChild(qt);
     qtyTexts.push(qt);
   }
@@ -192,6 +335,14 @@ export function createInvOverlay(opts = {}) {
 
       const q = getQty(item);
       qtyTexts[i].text = q > 1 ? `x${q}` : "";
+
+      if (!(dragSprite && dragStartSlot === i)) {
+        const meta = slotMeta[i];
+        if (meta) {
+          slots[i].x = meta.spriteX;
+          slots[i].y = meta.spriteY;
+        }
+      }
     }
   }
 
@@ -210,6 +361,7 @@ export function createInvOverlay(opts = {}) {
     },
     destroy() {
       clearInterval(timer);
+      restoreDraggedSprite();
       root.removeFromParent?.();
       root.destroy({ children: true });
     },
