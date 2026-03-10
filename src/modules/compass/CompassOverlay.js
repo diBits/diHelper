@@ -34,9 +34,9 @@ export function createCompassOverlay() {
     root.id = rootId;
     root.style.cssText = `
         position:fixed;
-        left:210px;
+        left:425px;
         bottom:12px;
-        z-index:999999;
+        z-index:1000000;
         background:rgba(12,12,12,.82);
         border:1px solid rgba(55,55,55,.95);
         border-radius:0;
@@ -49,13 +49,13 @@ export function createCompassOverlay() {
         box-sizing:border-box;
 `;
 
-    const title = document.createElement("div");
-    title.textContent = "Compass";
-    title.style.cssText = `
-        font-weight:bold;
-        margin-bottom:8px;
-        text-align:center;
-    `;
+    //const title = document.createElement("div");
+    //title.textContent = "Compass";
+    //title.style.cssText = `
+    //    font-weight:bold;
+    //    margin-bottom:8px;
+    //    text-align:center;
+    //`;
 
     const map = document.createElement("div");
     map.setAttribute("data-role", "map");
@@ -71,7 +71,7 @@ export function createCompassOverlay() {
     dir.setAttribute("data-role", "dir");
     dir.textContent = "Dir: Unknown";
 
-    root.appendChild(title);
+    //root.appendChild(title);
     root.appendChild(map);
     root.appendChild(pos);
     root.appendChild(dir);

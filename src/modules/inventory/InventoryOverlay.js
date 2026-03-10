@@ -135,20 +135,6 @@ export function createInvOverlay(opts = {}) {
       slotHighlights.endFill();
     }
 
-    const nm = new PIXI.Text("", {
-      fontFamily: "Verdana",
-      fontSize: Math.max(8, Math.floor(size * 0.22)),
-      fill: 0xffffff,
-      dropShadow: true,
-      dropShadowDistance: 1,
-      dropShadowBlur: 2,
-    });
-    nm.anchor.set(0.5, 0);
-    nm.x = baseX + size / 2;
-    nm.y = baseY + 1;
-    panel.addChild(nm);
-    nameTexts.push(nm);
-
     const spr = new PIXI.Sprite(textureById(791) || PIXI.Texture.WHITE);
     spr.width = iconSize;
     spr.height = iconSize;
@@ -157,17 +143,35 @@ export function createInvOverlay(opts = {}) {
     panel.addChild(spr);
     slots.push(spr);
 
+    const nm = new PIXI.Text("", {
+      fontFamily: "Verdana",
+      fontSize: Math.max(8, Math.floor(size * 0.26)),
+      fill: 0xffffff,
+      stroke: 0x000000,
+      strokeThickness: 2,
+      dropShadow: true,
+      dropShadowDistance: 1,
+      dropShadowBlur: 2,
+    });
+    nm.anchor.set(0.5, 0);
+    nm.x = baseX + size / 2;
+    nm.y = baseY - 3;
+    panel.addChild(nm);
+    nameTexts.push(nm);
+
     const qt = new PIXI.Text("", {
       fontFamily: "Verdana",
-      fontSize: Math.max(8, Math.floor(size * 0.22)),
+      fontSize: Math.max(8, Math.floor(size * 0.24)),
       fill: 0xffffff,
+      stroke: 0x000000,
+      strokeThickness: 2,
       dropShadow: true,
       dropShadowDistance: 1,
       dropShadowBlur: 2,
     });
     qt.anchor.set(0.5, 1);
     qt.x = baseX + size / 2;
-    qt.y = baseY + size - 2;
+    qt.y = baseY + size + 3;
     panel.addChild(qt);
     qtyTexts.push(qt);
   }
