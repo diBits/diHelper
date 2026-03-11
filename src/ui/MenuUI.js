@@ -69,6 +69,7 @@ export class MenuUI {
         panel.id = "dihelper_menu_panel";
         panel.style.cssText = `
             display: none;
+            position: relative;
             margin-bottom: 8px;
             background: rgba(12,12,12,.82);
             border: 1px solid rgba(55,55,55,.95);
@@ -79,18 +80,12 @@ export class MenuUI {
             box-sizing: border-box;
         `;
 
-        const menuRow = document.createElement("div");
-        menuRow.style.cssText = `
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-        `;
-
         const mainColumn = document.createElement("div");
         mainColumn.style.cssText = `
             display: flex;
             flex-direction: column;
             gap: 8px;
+            position: relative;
         `;
 
         const btnInv = document.createElement("button");
@@ -129,8 +124,16 @@ export class MenuUI {
         mapSubmenu.id = "dihelper_map_submenu";
         mapSubmenu.style.cssText = `
             display: none;
+            position: absolute;
+            left: calc(100% + 15px);
+            top: -10px;
+            background: rgba(12,12,12,.92);
+            border: 1px solid rgba(55,55,55,.95);
+            padding: 8px;
+            box-sizing: border-box;
             flex-direction: column;
             gap: 8px;
+            z-index: 1000003;
         `;
 
         const btnCompass = document.createElement("button");
@@ -165,6 +168,11 @@ export class MenuUI {
         `;
         btnMinimap.onclick = () => this.onToggleMinimap();
 
+        const zoomWrapper = document.createElement("div");
+        zoomWrapper.style.cssText = `
+            position: relative;
+        `;
+
         const btnZoom = document.createElement("button");
         btnZoom.id = "dihelper_btn_zoom";
         btnZoom.textContent = "ZOOM";
@@ -185,8 +193,16 @@ export class MenuUI {
         zoomSubmenu.id = "dihelper_zoom_submenu";
         zoomSubmenu.style.cssText = `
             display: none;
+            position: absolute;
+            left: calc(100% + 15px);
+            top: -50px;
+            background: rgba(12,12,12,.92);
+            border: 1px solid rgba(55,55,55,.95);
+            padding: 8px;
+            box-sizing: border-box;
             flex-direction: column;
             gap: 8px;
+            z-index: 1000004;
         `;
 
         const btnZoomIn = document.createElement("button");
@@ -224,18 +240,18 @@ export class MenuUI {
         zoomSubmenu.appendChild(btnZoomIn);
         zoomSubmenu.appendChild(btnZoomOut);
 
+        zoomWrapper.appendChild(btnZoom);
+        zoomWrapper.appendChild(zoomSubmenu);
+
         mapSubmenu.appendChild(btnCompass);
         mapSubmenu.appendChild(btnMinimap);
-        mapSubmenu.appendChild(btnZoom);
-        mapSubmenu.appendChild(zoomSubmenu);
+        mapSubmenu.appendChild(zoomWrapper);
 
         mainColumn.appendChild(btnInv);
         mainColumn.appendChild(btnMap);
+        mainColumn.appendChild(mapSubmenu);
 
-        menuRow.appendChild(mainColumn);
-        menuRow.appendChild(mapSubmenu);
-
-        panel.appendChild(menuRow);
+        panel.appendChild(mainColumn);
 
         const row = document.createElement("div");
         row.style.cssText = `
@@ -387,6 +403,7 @@ export class MenuUI {
 
     toggleZoomSubmenu() {
         if (!this.zoomSubmenu) return;
+
         this.zoomSubmenu.style.display =
             this.zoomSubmenu.style.display === "none" ? "flex" : "none";
     }

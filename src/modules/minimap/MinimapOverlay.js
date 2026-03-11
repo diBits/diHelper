@@ -1,11 +1,121 @@
 import { normalizePoint } from "./minimap.js";
 
+function normalizeOverlayPosition(root, storageKey) {
+    try {
+        const saved = JSON.parse(localStorage.getItem(storageKey) || "null");
+
+        if (
+            saved &&
+            typeof saved.left === "number" &&
+            typeof saved.top === "number"
+        ) {
+            root.style.left = `${saved.left}px`;
+            root.style.top = `${saved.top}px`;
+            root.style.right = "auto";
+            root.style.bottom = "auto";
+            return;
+        }
+    } catch { }
+
+    const rect = root.getBoundingClientRect();
+    root.style.left = `${rect.left}px`;
+    root.style.top = `${rect.top}px`;
+    root.style.right = "auto";
+    root.style.bottom = "auto";
+}
+
+function saveOverlayPosition(root, storageKey) {
+    const left = parseFloat(root.style.left);
+    const top = parseFloat(root.style.top);
+
+    if (Number.isFinite(left) && Number.isFinite(top)) {
+        localStorage.setItem(
+            storageKey,
+            JSON.stringify({ left, top })
+        );
+    }
+}
+
+function makeOverlayDraggable(root, storageKey) {
+    if (root.__diDraggable) return;
+    root.__diDraggable = true;
+
+    normalizeOverlayPosition(root, storageKey);
+    root.style.cursor = "grab";
+
+    let dragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    const onMouseMove = (e) => {
+        if (!dragging) return;
+
+        root.style.left = `${e.clientX - offsetX}px`;
+        root.style.top = `${e.clientY - offsetY}px`;
+    };
+
+    const onMouseUp = () => {
+        if (!dragging) return;
+        dragging = false;
+        root.style.cursor = "grab";
+        saveOverlayPosition(root, storageKey);
+        window.removeEventListener("mousemove", onMouseMove);
+        window.removeEventListener("mouseup", onMouseUp);
+    };
+
+    root.addEventListener("mousedown", (e) => {
+        if (e.button !== 0) return;
+
+        const rect = root.getBoundingClientRect();
+        dragging = true;
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+        root.style.cursor = "grabbing";
+
+        window.addEventListener("mousemove", onMouseMove);
+        window.addEventListener("mouseup", onMouseUp);
+    });
+
+    const onTouchMove = (e) => {
+        if (!dragging) return;
+        const touch = e.touches[0];
+        if (!touch) return;
+
+        root.style.left = `${touch.clientX - offsetX}px`;
+        root.style.top = `${touch.clientY - offsetY}px`;
+    };
+
+    const onTouchEnd = () => {
+        if (!dragging) return;
+        dragging = false;
+        root.style.cursor = "grab";
+        saveOverlayPosition(root, storageKey);
+        window.removeEventListener("touchmove", onTouchMove);
+        window.removeEventListener("touchend", onTouchEnd);
+    };
+
+    root.addEventListener("touchstart", (e) => {
+        const touch = e.touches[0];
+        if (!touch) return;
+
+        const rect = root.getBoundingClientRect();
+        dragging = true;
+        offsetX = touch.clientX - rect.left;
+        offsetY = touch.clientY - rect.top;
+
+        window.addEventListener("touchmove", onTouchMove, { passive: true });
+        window.addEventListener("touchend", onTouchEnd);
+    }, { passive: true });
+}
+
 export function createMinimapOverlay() {
     const rootId = "dihelper_minimap_overlay";
+    const storageKey = "dihelper_minimap_overlay_pos";
     const mapSize = 180;
 
     const existing = document.getElementById(rootId);
     if (existing) {
+        makeOverlayDraggable(existing, storageKey);
         return buildApi(existing, mapSize);
     }
 
@@ -25,16 +135,6 @@ export function createMinimapOverlay() {
         box-sizing: border-box;
         user-select: none;
     `;
-    //Resolvi remover os nomes para diminuir o espaço ocupado no mapa para uma futura versao mobile
-    //const title = document.createElement("div");
-    //title.setAttribute("data-role", "title");
-    //title.textContent = "MINIMAP";
-    //title.style.cssText = `
-    //    font-weight: bold;
-    //    font-size: 12px;
-    //    margin-bottom: 6px;
-    //    text-align: center;
-    //`;
 
     const mapBox = document.createElement("div");
     mapBox.setAttribute("data-role", "map-box");
@@ -131,10 +231,11 @@ export function createMinimapOverlay() {
     mapBox.appendChild(quadSE);
     mapBox.appendChild(dotsLayer);
 
-    //root.appendChild(title); titulo removido
     root.appendChild(mapBox);
 
     (document.body || document.documentElement).appendChild(root);
+
+    makeOverlayDraggable(root, storageKey);
 
     return buildApi(root, mapSize);
 }
