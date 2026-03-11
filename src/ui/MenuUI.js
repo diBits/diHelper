@@ -5,6 +5,8 @@ export class MenuUI {
         this.onToggleInventory = options.onToggleInventory ?? (() => { });
         this.onToggleCompass = options.onToggleCompass ?? (() => { });
         this.onToggleMinimap = options.onToggleMinimap ?? (() => { });
+        this.onZoomIn = options.onZoomIn ?? (() => { });
+        this.onZoomOut = options.onZoomOut ?? (() => { });
 
         this.root = null;
         this.panel = null;
@@ -15,8 +17,14 @@ export class MenuUI {
         this.invButton = null;
         this.mapButton = null;
         this.mapSubmenu = null;
+
         this.compassButton = null;
         this.minimapButton = null;
+
+        this.zoomButton = null;
+        this.zoomSubmenu = null;
+        this.zoomInButton = null;
+        this.zoomOutButton = null;
     }
 
     mount() {
@@ -29,11 +37,18 @@ export class MenuUI {
             this.mainButton = document.getElementById("dihelper_menu_btn");
             this.startButton = document.getElementById("dihelper_btn_start");
             this.stopButton = document.getElementById("dihelper_btn_stop");
+
             this.invButton = document.getElementById("dihelper_btn_inv");
             this.mapButton = document.getElementById("dihelper_btn_map");
             this.mapSubmenu = document.getElementById("dihelper_map_submenu");
+
             this.compassButton = document.getElementById("dihelper_btn_compass");
             this.minimapButton = document.getElementById("dihelper_btn_minimap");
+
+            this.zoomButton = document.getElementById("dihelper_btn_zoom");
+            this.zoomSubmenu = document.getElementById("dihelper_zoom_submenu");
+            this.zoomInButton = document.getElementById("dihelper_btn_zoom_in");
+            this.zoomOutButton = document.getElementById("dihelper_btn_zoom_out");
             return;
         }
 
@@ -150,8 +165,69 @@ export class MenuUI {
         `;
         btnMinimap.onclick = () => this.onToggleMinimap();
 
+        const btnZoom = document.createElement("button");
+        btnZoom.id = "dihelper_btn_zoom";
+        btnZoom.textContent = "ZOOM";
+        btnZoom.style.cssText = `
+            width: 170px;
+            padding: 8px 10px;
+            border-radius: 0;
+            border: 1px solid rgba(55,55,55,.95);
+            background: rgba(255,255,255,.08);
+            color: #fff;
+            cursor: pointer;
+            text-align: center;
+            box-sizing: border-box;
+        `;
+        btnZoom.onclick = () => this.toggleZoomSubmenu();
+
+        const zoomSubmenu = document.createElement("div");
+        zoomSubmenu.id = "dihelper_zoom_submenu";
+        zoomSubmenu.style.cssText = `
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+        `;
+
+        const btnZoomIn = document.createElement("button");
+        btnZoomIn.id = "dihelper_btn_zoom_in";
+        btnZoomIn.textContent = "+";
+        btnZoomIn.style.cssText = `
+            width: 60px;
+            padding: 8px 10px;
+            border-radius: 0;
+            border: 1px solid rgba(55,55,55,.95);
+            background: rgba(255,255,255,.08);
+            color: #fff;
+            cursor: pointer;
+            text-align: center;
+            box-sizing: border-box;
+        `;
+        btnZoomIn.onclick = () => this.onZoomIn();
+
+        const btnZoomOut = document.createElement("button");
+        btnZoomOut.id = "dihelper_btn_zoom_out";
+        btnZoomOut.textContent = "-";
+        btnZoomOut.style.cssText = `
+            width: 60px;
+            padding: 8px 10px;
+            border-radius: 0;
+            border: 1px solid rgba(55,55,55,.95);
+            background: rgba(255,255,255,.08);
+            color: #fff;
+            cursor: pointer;
+            text-align: center;
+            box-sizing: border-box;
+        `;
+        btnZoomOut.onclick = () => this.onZoomOut();
+
+        zoomSubmenu.appendChild(btnZoomIn);
+        zoomSubmenu.appendChild(btnZoomOut);
+
         mapSubmenu.appendChild(btnCompass);
         mapSubmenu.appendChild(btnMinimap);
+        mapSubmenu.appendChild(btnZoom);
+        mapSubmenu.appendChild(zoomSubmenu);
 
         mainColumn.appendChild(btnInv);
         mainColumn.appendChild(btnMap);
@@ -233,11 +309,18 @@ export class MenuUI {
         this.mainButton = main;
         this.startButton = btnStart;
         this.stopButton = btnStop;
+
         this.invButton = btnInv;
         this.mapButton = btnMap;
         this.mapSubmenu = mapSubmenu;
+
         this.compassButton = btnCompass;
         this.minimapButton = btnMinimap;
+
+        this.zoomButton = btnZoom;
+        this.zoomSubmenu = zoomSubmenu;
+        this.zoomInButton = btnZoomIn;
+        this.zoomOutButton = btnZoomOut;
 
         console.log("[DIHELPER] MenuUI montado ✅");
     }
@@ -255,6 +338,7 @@ export class MenuUI {
         if (!this.panel) return;
         this.panel.style.display = "none";
         this.closeMapSubmenu();
+        this.closeZoomSubmenu();
     }
 
     togglePanel() {
@@ -265,6 +349,7 @@ export class MenuUI {
 
         if (!isClosed) {
             this.closeMapSubmenu();
+            this.closeZoomSubmenu();
         }
     }
 
@@ -276,12 +361,33 @@ export class MenuUI {
     closeMapSubmenu() {
         if (!this.mapSubmenu) return;
         this.mapSubmenu.style.display = "none";
+        this.closeZoomSubmenu();
     }
 
     toggleMapSubmenu() {
         if (!this.mapSubmenu) return;
 
-        this.mapSubmenu.style.display =
-            this.mapSubmenu.style.display === "none" ? "flex" : "none";
+        const isClosed = this.mapSubmenu.style.display === "none";
+        this.mapSubmenu.style.display = isClosed ? "flex" : "none";
+
+        if (!isClosed) {
+            this.closeZoomSubmenu();
+        }
+    }
+
+    openZoomSubmenu() {
+        if (!this.zoomSubmenu) return;
+        this.zoomSubmenu.style.display = "flex";
+    }
+
+    closeZoomSubmenu() {
+        if (!this.zoomSubmenu) return;
+        this.zoomSubmenu.style.display = "none";
+    }
+
+    toggleZoomSubmenu() {
+        if (!this.zoomSubmenu) return;
+        this.zoomSubmenu.style.display =
+            this.zoomSubmenu.style.display === "none" ? "flex" : "none";
     }
 }

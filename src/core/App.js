@@ -3,6 +3,7 @@ import { MenuUI } from "../ui/MenuUI.js";
 import { InventoryModule } from "../modules/inventory/InventoryModule.js";
 import { CompassModule } from "../modules/compass/CompassModule.js";
 import { MinimapModule } from "../modules/minimap/MinimapModule.js";
+import { ZoomModule } from "../modules/zoom/ZoomModule.js";
 
 export class App {
     constructor() {
@@ -25,6 +26,7 @@ export class App {
 
         this.modules.register("compass", new CompassModule());
         this.modules.register("minimap", new MinimapModule());
+        this.modules.register("zoom", new ZoomModule());
 
         this.menuUI = new MenuUI({
             onStart: () => this.start(),
@@ -32,6 +34,8 @@ export class App {
             onToggleInventory: () => this.toggleInventory(),
             onToggleCompass: () => this.toggleCompass(),
             onToggleMinimap: () => this.toggleMinimap(),
+            onZoomIn: () => this.zoomIn(),
+            onZoomOut: () => this.zoomOut(),
         });
 
         console.log("[DIHELPER] App inicializado ✅");
@@ -51,6 +55,10 @@ export class App {
 
     getMinimapModule() {
         return this.modules.get("minimap");
+    }
+
+    getZoomModule() {
+        return this.modules.get("zoom");
     }
 
     start() {
@@ -80,12 +88,24 @@ export class App {
         this.getMinimapModule()?.toggle();
     }
 
+    zoomIn() {
+        this.ensureMenu();
+        this.getZoomModule()?.zoomIn();
+    }
+
+    zoomOut() {
+        this.ensureMenu();
+        this.getZoomModule()?.zoomOut();
+    }
+
     exposeDebug() {
         window.diStart = () => this.start();
         window.diStop = () => this.stop();
         window.diInvToggle = () => this.toggleInventory();
         window.diCompassToggle = () => this.toggleCompass();
         window.diMinimapToggle = () => this.toggleMinimap();
+        window.diZoomIn = () => this.zoomIn();
+        window.diZoomOut = () => this.zoomOut();
     }
 
     mount() {
