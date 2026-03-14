@@ -1,4 +1,7 @@
 # diHelper
+TY meu brother pela ajuda com as dicas e variaveis free s2
+@dicraa https://github.com/discraa/DskDev
+TY @SouPreto pelos codigos livres kkkkkk
 
 Extensão para Chrome/Chromium (Manifest V3) voltada para **Qualidade de Vida (QoS)** no client web do **Mystera Legacy**.
 
